@@ -1,4 +1,4 @@
-name: Build Realme 3D Flip Clock APK
+name: Build Realme 60fps 3D Flip Clock APK
 
 on:
   push:
@@ -63,8 +63,8 @@ jobs:
                   applicationId "com.realme.flipclock"
                   minSdk 31
                   targetSdk 34
-                  versionCode 2
-                  versionName "2.0"
+                  versionCode 3
+                  versionName "3.0"
               }
           
               buildTypes {
@@ -146,7 +146,7 @@ jobs:
                       android:foregroundServiceType="specialUse">
                       <property
                           android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
-                          android:value="Live 3D split-flap home screen clock widget second ticker" />
+                          android:value="60fps hardware-accelerated ViewFlipper home screen clock widget" />
                   </service>
           
                   <receiver
@@ -176,8 +176,8 @@ jobs:
           <resources>
               <string name="app_name">3D Flip Clock</string>
               <string name="wallpaper_label">3D Split-Flap Live Wallpaper</string>
-              <string name="wallpaper_description">Real 3D split-flap flip clock (Hours, Minutes, Seconds) with custom Gallery background, Dark AMOLED, White, and Transparent modes.</string>
-              <string name="widget_label">3D Flip Clock Widget (Live Ticking)</string>
+              <string name="wallpaper_description">60fps hardware-accelerated 3D split-flap flip clock (Hours, Minutes, Seconds) with Gallery photo picker, Dark AMOLED, White, and Transparent modes.</string>
+              <string name="widget_label">3D Flip Clock Widget (60fps Smooth)</string>
           </resources>
           EOF_FILE
 
@@ -209,6 +209,104 @@ jobs:
               android:description="@string/wallpaper_description" />
           EOF_FILE
 
+          mkdir -p "app/src/main/res/anim"
+          cat << 'EOF_FILE' > "app/src/main/res/anim/flap_top_out.xml"
+          <?xml version="1.0" encoding="utf-8"?>
+          <set xmlns:android="http://schemas.android.com/apk/res/android"
+              android:shareInterpolator="false"
+              android:zAdjustment="top">
+              <scale
+                  android:interpolator="@android:anim/accelerate_interpolator"
+                  android:fromXScale="1.0"
+                  android:toXScale="1.0"
+                  android:fromYScale="1.0"
+                  android:toYScale="0.0"
+                  android:pivotX="50%"
+                  android:pivotY="100%"
+                  android:duration="170" />
+          </set>
+          EOF_FILE
+
+          mkdir -p "app/src/main/res/anim"
+          cat << 'EOF_FILE' > "app/src/main/res/anim/flap_top_in.xml"
+          <?xml version="1.0" encoding="utf-8"?>
+          <set xmlns:android="http://schemas.android.com/apk/res/android"
+              android:shareInterpolator="false"
+              android:zAdjustment="bottom">
+              <alpha
+                  android:fromAlpha="0.6"
+                  android:toAlpha="1.0"
+                  android:duration="170" />
+          </set>
+          EOF_FILE
+
+          mkdir -p "app/src/main/res/anim"
+          cat << 'EOF_FILE' > "app/src/main/res/anim/flap_bot_in.xml"
+          <?xml version="1.0" encoding="utf-8"?>
+          <set xmlns:android="http://schemas.android.com/apk/res/android"
+              android:shareInterpolator="false"
+              android:zAdjustment="top"
+              android:fillBefore="true"
+              android:fillEnabled="true">
+              <scale
+                  android:interpolator="@android:anim/decelerate_interpolator"
+                  android:startOffset="165"
+                  android:fromXScale="1.0"
+                  android:toXScale="1.0"
+                  android:fromYScale="0.0"
+                  android:toYScale="1.0"
+                  android:pivotX="50%"
+                  android:pivotY="0%"
+                  android:duration="180"
+                  android:fillBefore="true"
+                  android:fillEnabled="true" />
+          </set>
+          EOF_FILE
+
+          mkdir -p "app/src/main/res/anim"
+          cat << 'EOF_FILE' > "app/src/main/res/anim/flap_bot_out.xml"
+          <?xml version="1.0" encoding="utf-8"?>
+          <set xmlns:android="http://schemas.android.com/apk/res/android"
+              android:shareInterpolator="false"
+              android:zAdjustment="bottom">
+              <alpha
+                  android:startOffset="165"
+                  android:fromAlpha="1.0"
+                  android:toAlpha="0.35"
+                  android:duration="180" />
+          </set>
+          EOF_FILE
+
+          mkdir -p "app/src/main/res/drawable"
+          cat << 'EOF_FILE' > "app/src/main/res/drawable/widget_bg_dark.xml"
+          <?xml version="1.0" encoding="utf-8"?>
+          <shape xmlns:android="http://schemas.android.com/apk/res/android"
+              android:shape="rectangle">
+              <solid android:color="#000000" />
+              <corners android:radius="24dp" />
+          </shape>
+          EOF_FILE
+
+          mkdir -p "app/src/main/res/drawable"
+          cat << 'EOF_FILE' > "app/src/main/res/drawable/widget_bg_light.xml"
+          <?xml version="1.0" encoding="utf-8"?>
+          <shape xmlns:android="http://schemas.android.com/apk/res/android"
+              android:shape="rectangle">
+              <solid android:color="#F2F2F7" />
+              <corners android:radius="24dp" />
+          </shape>
+          EOF_FILE
+
+          mkdir -p "app/src/main/res/drawable"
+          cat << 'EOF_FILE' > "app/src/main/res/drawable/widget_bg_trans.xml"
+          <?xml version="1.0" encoding="utf-8"?>
+          <shape xmlns:android="http://schemas.android.com/apk/res/android"
+              android:shape="rectangle">
+              <solid android:color="#00000000" />
+              <corners android:radius="24dp" />
+          </shape>
+          EOF_FILE
+
           mkdir -p "app/src/main/res/layout"
           cat << 'EOF_FILE' > "app/src/main/res/layout/widget_flip.xml"
           <?xml version="1.0" encoding="utf-8"?>
@@ -216,15 +314,198 @@ jobs:
               android:id="@+id/widget_root"
               android:layout_width="match_parent"
               android:layout_height="match_parent"
-              android:padding="2dp">
+              android:background="@drawable/widget_bg_dark"
+              android:padding="10dp">
           
-              <ImageView
-                  android:id="@+id/widget_image"
+              <LinearLayout
                   android:layout_width="match_parent"
                   android:layout_height="match_parent"
-                  android:scaleType="fitCenter"
-                  android:contentDescription="@string/app_name" />
+                  android:orientation="horizontal"
+                  android:weightSum="264"
+                  android:gravity="center">
           
+                  <!-- CARD 1: HOURS (Top Half ViewFlipper + Bottom Half ViewFlipper) -->
+                  <LinearLayout
+                      android:id="@+id/hour_card_box"
+                      android:layout_width="0dp"
+                      android:layout_height="match_parent"
+                      android:layout_weight="100"
+                      android:orientation="vertical"
+                      android:weightSum="2">
+          
+                      <ViewFlipper
+                          android:id="@+id/hour_top_flipper"
+                          android:layout_width="match_parent"
+                          android:layout_height="0dp"
+                          android:layout_weight="1"
+                          android:inAnimation="@anim/flap_top_in"
+                          android:outAnimation="@anim/flap_top_out">
+                          <ImageView
+                              android:id="@+id/hour_top_0"
+                              android:layout_width="match_parent"
+                              android:layout_height="match_parent"
+                              android:scaleType="fitXY"
+                              android:contentDescription="@string/app_name" />
+                          <ImageView
+                              android:id="@+id/hour_top_1"
+                              android:layout_width="match_parent"
+                              android:layout_height="match_parent"
+                              android:scaleType="fitXY"
+                              android:contentDescription="@string/app_name" />
+                      </ViewFlipper>
+          
+                      <ViewFlipper
+                          android:id="@+id/hour_bot_flipper"
+                          android:layout_width="match_parent"
+                          android:layout_height="0dp"
+                          android:layout_weight="1"
+                          android:inAnimation="@anim/flap_bot_in"
+                          android:outAnimation="@anim/flap_bot_out">
+                          <ImageView
+                              android:id="@+id/hour_bot_0"
+                              android:layout_width="match_parent"
+                              android:layout_height="match_parent"
+                              android:scaleType="fitXY"
+                              android:contentDescription="@string/app_name" />
+                          <ImageView
+                              android:id="@+id/hour_bot_1"
+                              android:layout_width="match_parent"
+                              android:layout_height="match_parent"
+                              android:scaleType="fitXY"
+                              android:contentDescription="@string/app_name" />
+                      </ViewFlipper>
+                  </LinearLayout>
+          
+                  <FrameLayout
+                      android:layout_width="0dp"
+                      android:layout_height="match_parent"
+                      android:layout_weight="6" />
+          
+                  <!-- CARD 2: MINUTES (Top Half ViewFlipper + Bottom Half ViewFlipper) -->
+                  <LinearLayout
+                      android:id="@+id/min_card_box"
+                      android:layout_width="0dp"
+                      android:layout_height="match_parent"
+                      android:layout_weight="100"
+                      android:orientation="vertical"
+                      android:weightSum="2">
+          
+                      <ViewFlipper
+                          android:id="@+id/min_top_flipper"
+                          android:layout_width="match_parent"
+                          android:layout_height="0dp"
+                          android:layout_weight="1"
+                          android:inAnimation="@anim/flap_top_in"
+                          android:outAnimation="@anim/flap_top_out">
+                          <ImageView
+                              android:id="@+id/min_top_0"
+                              android:layout_width="match_parent"
+                              android:layout_height="match_parent"
+                              android:scaleType="fitXY"
+                              android:contentDescription="@string/app_name" />
+                          <ImageView
+                              android:id="@+id/min_top_1"
+                              android:layout_width="match_parent"
+                              android:layout_height="match_parent"
+                              android:scaleType="fitXY"
+                              android:contentDescription="@string/app_name" />
+                      </ViewFlipper>
+          
+                      <ViewFlipper
+                          android:id="@+id/min_bot_flipper"
+                          android:layout_width="match_parent"
+                          android:layout_height="0dp"
+                          android:layout_weight="1"
+                          android:inAnimation="@anim/flap_bot_in"
+                          android:outAnimation="@anim/flap_bot_out">
+                          <ImageView
+                              android:id="@+id/min_bot_0"
+                              android:layout_width="match_parent"
+                              android:layout_height="match_parent"
+                              android:scaleType="fitXY"
+                              android:contentDescription="@string/app_name" />
+                          <ImageView
+                              android:id="@+id/min_bot_1"
+                              android:layout_width="match_parent"
+                              android:layout_height="match_parent"
+                              android:scaleType="fitXY"
+                              android:contentDescription="@string/app_name" />
+                      </ViewFlipper>
+                  </LinearLayout>
+          
+                  <FrameLayout
+                      android:layout_width="0dp"
+                      android:layout_height="match_parent"
+                      android:layout_weight="6" />
+          
+                  <!-- CARD 3: SECONDS (Bottom-Right Corner, matching 1000386934.jpg) -->
+                  <LinearLayout
+                      android:id="@+id/sec_column_box"
+                      android:layout_width="0dp"
+                      android:layout_height="match_parent"
+                      android:layout_weight="52"
+                      android:orientation="vertical"
+                      android:weightSum="100">
+          
+                      <FrameLayout
+                          android:layout_width="match_parent"
+                          android:layout_height="0dp"
+                          android:layout_weight="50" />
+          
+                      <LinearLayout
+                          android:id="@+id/sec_card_box"
+                          android:layout_width="match_parent"
+                          android:layout_height="0dp"
+                          android:layout_weight="50"
+                          android:orientation="vertical"
+                          android:weightSum="2">
+          
+                          <ViewFlipper
+                              android:id="@+id/sec_top_flipper"
+                              android:layout_width="match_parent"
+                              android:layout_height="0dp"
+                              android:layout_weight="1"
+                              android:inAnimation="@anim/flap_top_in"
+                              android:outAnimation="@anim/flap_top_out">
+                              <ImageView
+                                  android:id="@+id/sec_top_0"
+                                  android:layout_width="match_parent"
+                                  android:layout_height="match_parent"
+                                  android:scaleType="fitXY"
+                                  android:contentDescription="@string/app_name" />
+                              <ImageView
+                                  android:id="@+id/sec_top_1"
+                                  android:layout_width="match_parent"
+                                  android:layout_height="match_parent"
+                                  android:scaleType="fitXY"
+                                  android:contentDescription="@string/app_name" />
+                          </ViewFlipper>
+          
+                          <ViewFlipper
+                              android:id="@+id/sec_bot_flipper"
+                              android:layout_width="match_parent"
+                              android:layout_height="0dp"
+                              android:layout_weight="1"
+                              android:inAnimation="@anim/flap_bot_in"
+                              android:outAnimation="@anim/flap_bot_out">
+                              <ImageView
+                                  android:id="@+id/sec_bot_0"
+                                  android:layout_width="match_parent"
+                                  android:layout_height="match_parent"
+                                  android:scaleType="fitXY"
+                                  android:contentDescription="@string/app_name" />
+                              <ImageView
+                                  android:id="@+id/sec_bot_1"
+                                  android:layout_width="match_parent"
+                                  android:layout_height="match_parent"
+                                  android:scaleType="fitXY"
+                                  android:contentDescription="@string/app_name" />
+                          </ViewFlipper>
+                      </LinearLayout>
+                  </LinearLayout>
+              </LinearLayout>
+          
+              <!-- Transparent Tap Zones over Left (Cycle Theme) and Right (Open App) -->
               <LinearLayout
                   android:layout_width="match_parent"
                   android:layout_height="match_parent"
@@ -290,7 +571,7 @@ jobs:
           
           public class ClockPrefs {
           
-              public static final String PREFS_NAME = "FlipClockV2Prefs";
+              public static final String PREFS_NAME = "FlipClockV3Prefs";
               public static final String KEY_THEME_MODE = "theme_mode";
               public static final String KEY_USE_24H = "use_24h";
               public static final String KEY_VERTICAL_POS = "vertical_pos";
@@ -500,61 +781,38 @@ jobs:
                   borderPaint.setStyle(Paint.Style.STROKE);
               }
           
-              public void drawClock(
-                      Context context,
-                      Canvas canvas,
-                      int width,
-                      int height,
-                      long nowMillis,
-                      int themeMode,
-                      boolean use24Hour,
-                      int verticalPos,
-                      boolean isWidget,
-                      float pixelShiftX,
-                      float pixelShiftY
+              /**
+               * Renders a single card's Top Half and Bottom Half as two separate Bitmaps
+               * for the 60fps Hardware-Accelerated ViewFlipper Home Screen Widget.
+               */
+              public synchronized Bitmap[] renderCardHalvesForWidget(
+                      int cardW,
+                      int cardH,
+                      String text,
+                      String badgeText,
+                      int themeMode
               ) {
-                  if (width <= 0 || height <= 0) {
-                      return;
-                  }
+                  int evenH = (cardH / 2) * 2;
+                  int halfH = evenH / 2;
+                  Bitmap full = Bitmap.createBitmap(cardW, evenH, Bitmap.Config.ARGB_8888);
+                  Canvas canvas = new Canvas(full);
           
-                  // 1. Background rendering (AMOLED Dark, White, Transparent, or Custom Gallery Photo)
-                  if (isWidget) {
-                      // For the Home Screen Widget, clear background so rounded cards or transparent cards sit cleanly over launcher
-                      canvas.drawColor(Color.TRANSPARENT, PorterDuff.Mode.CLEAR);
-                      if (themeMode == ClockPrefs.MODE_AMOLED_DARK) {
-                          Paint widgetBg = new Paint(Paint.ANTI_ALIAS_FLAG);
-                          widgetBg.setColor(Color.BLACK);
-                          canvas.drawRoundRect(new RectF(0, 0, width, height), 42f, 42f, widgetBg);
-                      } else if (themeMode == ClockPrefs.MODE_WHITE_LIGHT) {
-                          Paint widgetBg = new Paint(Paint.ANTI_ALIAS_FLAG);
-                          widgetBg.setColor(Color.parseColor("#F2F2F7"));
-                          canvas.drawRoundRect(new RectF(0, 0, width, height), 42f, 42f, widgetBg);
-                      }
-                  } else {
-                      boolean drewCustomPhoto = false;
-                      if (context != null && ClockPrefs.hasCustomBackground(context)) {
-                          long currentStamp = ClockPrefs.getCustomBgStamp(context);
-                          if (cachedBgBitmap == null || cachedBgStamp != currentStamp) {
-                              cachedBgBitmap = ClockPrefs.loadCustomBackgroundBitmap(context);
-                              cachedBgStamp = currentStamp;
-                          }
-                          if (cachedBgBitmap != null && !cachedBgBitmap.isRecycled()) {
-                              drawCenterCropBitmap(canvas, cachedBgBitmap, width, height);
-                              drewCustomPhoto = true;
-                          }
-                      }
-                      if (!drewCustomPhoto) {
-                          if (themeMode == ClockPrefs.MODE_AMOLED_DARK) {
-                              canvas.drawColor(Color.BLACK);
-                          } else if (themeMode == ClockPrefs.MODE_WHITE_LIGHT) {
-                              canvas.drawColor(Color.parseColor("#F2F2F7"));
-                          } else {
-                              canvas.drawColor(Color.TRANSPARENT, PorterDuff.Mode.CLEAR);
-                          }
-                      }
-                  }
+                  int[] palette = getPalette(themeMode);
+                  draw3DSplitFlapCard(
+                          canvas,
+                          2f, 2f, cardW - 4f, evenH - 4f,
+                          text, text, 0.0f,
+                          badgeText,
+                          palette[0], palette[1], palette[2], palette[3], palette[4], palette[5]
+                  );
           
-                  // 2. Card color palette for each mode
+                  Bitmap topHalf = Bitmap.createBitmap(full, 0, 0, cardW, halfH);
+                  Bitmap botHalf = Bitmap.createBitmap(full, 0, halfH, cardW, halfH);
+                  full.recycle();
+                  return new Bitmap[]{topHalf, botHalf};
+              }
+          
+              private int[] getPalette(int themeMode) {
                   int cardTopColor;
                   int cardBottomColor;
                   int flapFaceColor;
@@ -572,16 +830,16 @@ jobs:
                           splitLineColor = Color.parseColor("#C7C7CC");
                           break;
                       case ClockPrefs.MODE_TRANS_LIGHT_TEXT:
-                          cardTopColor = Color.argb(135, 28, 28, 34);
-                          cardBottomColor = Color.argb(165, 16, 16, 20);
+                          cardTopColor = Color.argb(145, 28, 28, 34);
+                          cardBottomColor = Color.argb(175, 16, 16, 20);
                           flapFaceColor = Color.argb(215, 34, 34, 42);
-                          borderColor = Color.argb(130, 255, 255, 255);
+                          borderColor = Color.argb(135, 255, 255, 255);
                           digitColor = Color.parseColor("#F8FAFC");
                           splitLineColor = Color.argb(180, 0, 0, 0);
                           break;
                       case ClockPrefs.MODE_TRANS_DARK_TEXT:
-                          cardTopColor = Color.argb(150, 255, 255, 255);
-                          cardBottomColor = Color.argb(175, 232, 232, 240);
+                          cardTopColor = Color.argb(160, 255, 255, 255);
+                          cardBottomColor = Color.argb(185, 232, 232, 240);
                           flapFaceColor = Color.argb(225, 248, 248, 252);
                           borderColor = Color.argb(140, 24, 24, 27);
                           digitColor = Color.parseColor("#141417");
@@ -597,8 +855,56 @@ jobs:
                           splitLineColor = Color.parseColor("#000000");
                           break;
                   }
+                  return new int[]{cardTopColor, cardBottomColor, flapFaceColor, borderColor, digitColor, splitLineColor};
+              }
           
-                  // 3. Calculate current and previous second/minute/hour for true 3D split-flap transitions
+              public void drawClock(
+                      Context context,
+                      Canvas canvas,
+                      int width,
+                      int height,
+                      long nowMillis,
+                      int themeMode,
+                      boolean use24Hour,
+                      int verticalPos,
+                      boolean isWidget,
+                      float pixelShiftX,
+                      float pixelShiftY
+              ) {
+                  if (width <= 0 || height <= 0) {
+                      return;
+                  }
+          
+                  boolean drewCustomPhoto = false;
+                  if (!isWidget && context != null && ClockPrefs.hasCustomBackground(context)) {
+                      long currentStamp = ClockPrefs.getCustomBgStamp(context);
+                      if (cachedBgBitmap == null || cachedBgStamp != currentStamp) {
+                          cachedBgBitmap = ClockPrefs.loadCustomBackgroundBitmap(context);
+                          cachedBgStamp = currentStamp;
+                      }
+                      if (cachedBgBitmap != null && !cachedBgBitmap.isRecycled()) {
+                          drawCenterCropBitmap(canvas, cachedBgBitmap, width, height);
+                          drewCustomPhoto = true;
+                      }
+                  }
+                  if (!drewCustomPhoto) {
+                      if (themeMode == ClockPrefs.MODE_AMOLED_DARK) {
+                          canvas.drawColor(Color.BLACK);
+                      } else if (themeMode == ClockPrefs.MODE_WHITE_LIGHT) {
+                          canvas.drawColor(Color.parseColor("#F2F2F7"));
+                      } else {
+                          canvas.drawColor(Color.TRANSPARENT, PorterDuff.Mode.CLEAR);
+                      }
+                  }
+          
+                  int[] palette = getPalette(themeMode);
+                  int cardTopColor = palette[0];
+                  int cardBottomColor = palette[1];
+                  int flapFaceColor = palette[2];
+                  int borderColor = palette[3];
+                  int digitColor = palette[4];
+                  int splitLineColor = palette[5];
+          
                   Calendar currCal = Calendar.getInstance();
                   currCal.setTimeInMillis(nowMillis);
           
@@ -607,7 +913,6 @@ jobs:
           
                   int ms = currCal.get(Calendar.MILLISECOND);
                   float rawFlipProgress = Math.min(1.0f, Math.max(0.0f, ms / FLIP_DURATION_MS));
-                  // Smooth ease-in-out curve for realistic gravity-assisted flap drop
                   float flipProgress = easeInOutFlip(rawFlipProgress);
           
                   int currSec = currCal.get(Calendar.SECOND);
@@ -636,14 +941,12 @@ jobs:
                   String currSecStr = String.format(Locale.US, "%02d", currSec);
                   String prevSecStr = String.format(Locale.US, "%02d", prevSec);
           
-                  // Each card ONLY flips when its value changes!
                   float secFlipP = (currSec != prevSec) ? flipProgress : 0.0f;
                   float minFlipP = (currMin != prevMin) ? flipProgress : 0.0f;
                   float hourFlipP = (currHourDisp != prevHourDisp) ? flipProgress : 0.0f;
           
-                  // 4. Layout geometry matching 1000386934.jpg (Hours Card + Minutes Card + Small Seconds Card at bottom-right)
-                  float availW = width * (isWidget ? 0.94f : 0.90f);
-                  float availH = height * (isWidget ? 0.88f : 0.80f);
+                  float availW = width * 0.90f;
+                  float availH = height * 0.80f;
                   float unitByW = availW / 2.64f;
                   float unitByH = availH / 1.05f;
                   float bigCardW = Math.min(unitByW, unitByH);
@@ -656,9 +959,9 @@ jobs:
                   float startX = (width - totalW) * 0.5f + pixelShiftX;
           
                   float centerY;
-                  if (!isWidget && verticalPos == ClockPrefs.POS_TOP_WIDGET) {
+                  if (verticalPos == ClockPrefs.POS_TOP_WIDGET) {
                       centerY = Math.max(bigCardH * 0.72f, height * 0.28f) + pixelShiftY;
-                  } else if (!isWidget && verticalPos == ClockPrefs.POS_BOTTOM) {
+                  } else if (verticalPos == ClockPrefs.POS_BOTTOM) {
                       centerY = Math.min(height - bigCardH * 0.72f, height * 0.72f) + pixelShiftY;
                   } else {
                       centerY = height * 0.50f + pixelShiftY;
@@ -667,7 +970,6 @@ jobs:
           
                   String amPmBadge = use24Hour ? null : (isPm ? "PM" : "AM");
           
-                  // Card 1: Hours (Large Left)
                   draw3DSplitFlapCard(
                           canvas,
                           startX, topY, bigCardW, bigCardH,
@@ -676,7 +978,6 @@ jobs:
                           cardTopColor, cardBottomColor, flapFaceColor, borderColor, digitColor, splitLineColor
                   );
           
-                  // Card 2: Minutes (Large Middle)
                   float minX = startX + bigCardW + gap;
                   draw3DSplitFlapCard(
                           canvas,
@@ -686,7 +987,6 @@ jobs:
                           cardTopColor, cardBottomColor, flapFaceColor, borderColor, digitColor, splitLineColor
                   );
           
-                  // Card 3: Seconds (Small Bottom-Right, matching 1000386934.jpg)
                   float secX = minX + bigCardW + gap;
                   float secY = topY + bigCardH - secCardH;
                   draw3DSplitFlapCard(
@@ -711,7 +1011,6 @@ jobs:
                   float cy = y + h * 0.5f;
                   cardRect.set(x, y, x + w, y + h);
           
-                  // 1. Draw static upper half and lower half backgrounds
                   LinearGradient baseGrad = new LinearGradient(
                           x, y, x, y + h,
                           cardTopColor, cardBottomColor,
@@ -726,7 +1025,6 @@ jobs:
                   float textBaseline = cy - (fm.ascent + fm.descent) * 0.5f;
           
                   if (flipP <= 0.001f || flipP >= 0.999f) {
-                      // Static card (not currently mid-flip)
                       canvas.save();
                       cardClipPath.reset();
                       cardClipPath.addRoundRect(cardRect, radius, radius, Path.Direction.CW);
@@ -736,8 +1034,6 @@ jobs:
                       canvas.drawText(newText, cx, textBaseline, digitPaint);
                       canvas.restore();
                   } else {
-                      // ACTIVE 3D SPLIT-FLAP TRANSITION (matches 1000386934.jpg)
-                      // Layer A: Static Upper Half shows TOP of NEW number
                       canvas.save();
                       cardClipPath.reset();
                       cardClipPath.addRoundRect(cardRect, radius, radius, Path.Direction.CW);
@@ -748,7 +1044,6 @@ jobs:
                       canvas.drawText(newText, cx, textBaseline, digitPaint);
                       canvas.restore();
           
-                      // Layer B: Static Lower Half shows BOTTOM of OLD number
                       canvas.save();
                       cardClipPath.reset();
                       cardClipPath.addRoundRect(cardRect, radius, radius, Path.Direction.CW);
@@ -758,7 +1053,6 @@ jobs:
                       digitPaint.setAlpha(230);
                       canvas.drawText(oldText, cx, textBaseline, digitPaint);
           
-                      // If flap is in lower half (flipP >= 0.5), cast dark drop-shadow onto the old lower half
                       if (flipP >= 0.5f) {
                           float theta = (float) (flipP * Math.PI);
                           float sinT = (float) Math.sin(theta);
@@ -770,8 +1064,7 @@ jobs:
                       }
                       canvas.restore();
           
-                      // Layer C: 3D Hinged Falling Flap (Trapezoid with perspective flare + foreshortened text)
-                      float theta = (float) (flipP * Math.PI); // 0 to PI
+                      float theta = (float) (flipP * Math.PI);
                       float sinT = (float) Math.sin(theta);
                       float scaleY = Math.max(0.16f, (float) Math.abs(Math.cos(theta)));
                       float flapH = (h * 0.5f) * scaleY;
@@ -780,7 +1073,6 @@ jobs:
                       canvas.save();
                       flapPath.reset();
                       if (flipP < 0.5f) {
-                          // Phase 1 (0.0 -> 0.5): Upper flap falling forward above cy
                           float fyTop = cy - flapH;
                           flapPath.moveTo(x, cy);
                           flapPath.lineTo(x + w, cy);
@@ -797,7 +1089,6 @@ jobs:
                           digitPaint.setAlpha(255);
                           canvas.drawText(oldText, cx, textBaseline, digitPaint);
                       } else {
-                          // Phase 2 (0.5 -> 1.0): Lower flap swinging down below cy (like '28' & '59' in 1000386934.jpg)
                           float fyBot = cy + flapH;
                           flapPath.moveTo(x, cy);
                           flapPath.lineTo(x + w, cy);
@@ -816,18 +1107,15 @@ jobs:
                       }
                       canvas.restore();
           
-                      // Draw subtle 3D border around the falling trapezoid flap
                       borderPaint.setColor(borderColor);
                       borderPaint.setStrokeWidth(Math.max(1.5f, h * 0.006f));
                       canvas.drawPath(flapPath, borderPaint);
                   }
           
-                  // 2. Center horizontal split-flap hinge line
                   splitLinePaint.setColor(splitLineColor);
                   splitLinePaint.setStrokeWidth(Math.max(2.2f, h * 0.013f));
                   canvas.drawLine(x, cy, x + w, cy, splitLinePaint);
           
-                  // 3. Optional AM/PM badge in bottom-left of Hours card
                   if (badgeText != null) {
                       badgePaint.setColor(digitColor);
                       badgePaint.setAlpha(215);
@@ -835,7 +1123,6 @@ jobs:
                       canvas.drawText(badgeText, x + w * 0.065f, y + h * 0.92f, badgePaint);
                   }
           
-                  // 4. Outer card border
                   borderPaint.setColor(borderColor);
                   borderPaint.setStrokeWidth(Math.max(1.5f, h * 0.006f));
                   canvas.drawRoundRect(cardRect, radius, radius, borderPaint);
@@ -887,8 +1174,8 @@ jobs:
           
           public class FlipWidgetService extends Service {
           
-              private static final String CHANNEL_ID = "flip_widget_live_channel";
-              private static final int NOTIF_ID = 101;
+              private static final String CHANNEL_ID = "flip_widget_60fps_channel";
+              private static final int NOTIF_ID = 102;
           
               private final Handler handler = new Handler(Looper.getMainLooper());
               private boolean screenReceiverRegistered = false;
@@ -900,22 +1187,13 @@ jobs:
                           return;
                       }
                       long now = System.currentTimeMillis();
-                      FlipOdometerWidgetProvider.pushWidgetFrame(FlipWidgetService.this, now);
+                      FlipOdometerWidgetProvider.tickWidgetOnSecondBoundary(FlipWidgetService.this, now, false);
           
-                      // Schedule key 3D flip animation frames within the first 440ms of each second,
-                      // then sleep until the exact start of the next second!
-                      long msInSecond = now % 1000L;
-                      long delay;
-                      if (msInSecond < 110L) {
-                          delay = 115L - msInSecond; // Frame 1: Upper flap falling forward
-                      } else if (msInSecond < 250L) {
-                          delay = 255L - msInSecond; // Frame 2: Lower flap swinging down (just like 1000386934.jpg)
-                      } else if (msInSecond < 450L) {
-                          delay = 460L - msInSecond; // Frame 3: Flap landed flat
-                      } else {
-                          delay = 1005L - msInSecond; // Wait until start of next second
-                      }
-                      handler.postDelayed(this, Math.max(40L, delay));
+                      // Schedule ONLY ONCE PER SECOND right on the exact next second boundary!
+                      // The Launcher's hardware GPU handles the 60/120fps ViewFlipper animation automatically.
+                      long msIntoSecond = System.currentTimeMillis() % 1000L;
+                      long delayToNextSecond = 1005L - msIntoSecond;
+                      handler.postDelayed(this, Math.max(100L, delayToNextSecond));
                   }
               };
           
@@ -929,7 +1207,12 @@ jobs:
                           handler.removeCallbacks(tickRunnable);
                       } else if (Intent.ACTION_SCREEN_ON.equals(intent.getAction())) {
                           handler.removeCallbacks(tickRunnable);
-                          handler.post(tickRunnable);
+                          FlipOdometerWidgetProvider.tickWidgetOnSecondBoundary(
+                                  FlipWidgetService.this,
+                                  System.currentTimeMillis(),
+                                  true
+                          );
+                          handler.postDelayed(tickRunnable, 1005L - (System.currentTimeMillis() % 1000L));
                       }
                   }
               };
@@ -946,7 +1229,8 @@ jobs:
                   startForegroundSafely();
                   handler.removeCallbacks(tickRunnable);
                   if (hasActiveWidgets() && isScreenInteractive()) {
-                      handler.post(tickRunnable);
+                      FlipOdometerWidgetProvider.tickWidgetOnSecondBoundary(this, System.currentTimeMillis(), true);
+                      handler.postDelayed(tickRunnable, 1005L - (System.currentTimeMillis() % 1000L));
                   }
                   return START_STICKY;
               }
@@ -975,7 +1259,7 @@ jobs:
                       if (nm != null) {
                           NotificationChannel channel = new NotificationChannel(
                                   CHANNEL_ID,
-                                  "Flip Clock Widget Live Ticker",
+                                  "60fps Flip Clock Widget",
                                   NotificationManager.IMPORTANCE_MIN
                           );
                           channel.setShowBadge(false);
@@ -983,7 +1267,7 @@ jobs:
                       }
                       Notification notif = new Notification.Builder(this, CHANNEL_ID)
                               .setContentTitle("3D Flip Clock Widget Active")
-                              .setContentText("Animating live second flips while screen is on")
+                              .setContentText("60fps hardware-accelerated flip animation")
                               .setSmallIcon(R.drawable.ic_launcher)
                               .setOngoing(true)
                               .build();
@@ -1054,9 +1338,10 @@ jobs:
           import android.content.Context;
           import android.content.Intent;
           import android.graphics.Bitmap;
-          import android.graphics.Canvas;
           import android.os.Bundle;
           import android.widget.RemoteViews;
+          import java.util.Calendar;
+          import java.util.Locale;
           
           public class FlipOdometerWidgetProvider extends AppWidgetProvider {
           
@@ -1064,6 +1349,12 @@ jobs:
               public static final String ACTION_WIDGET_OPEN_APP = "com.realme.flipclock.ACTION_WIDGET_OPEN_APP";
           
               private static final FlipOdometerRenderer sharedRenderer = new FlipOdometerRenderer();
+          
+              private static int lastRenderedHour = -1;
+              private static int lastRenderedMin = -1;
+              private static int lastRenderedSec = -1;
+              private static int lastRenderedTheme = -1;
+              private static boolean lastRendered24h = false;
           
               @Override
               public void onEnabled(Context context) {
@@ -1073,14 +1364,14 @@ jobs:
           
               @Override
               public void onUpdate(Context context, AppWidgetManager appWidgetManager, int[] appWidgetIds) {
-                  pushWidgetFrame(context, System.currentTimeMillis());
+                  tickWidgetOnSecondBoundary(context, System.currentTimeMillis(), true);
                   FlipWidgetService.ensureRunning(context);
               }
           
               @Override
               public void onAppWidgetOptionsChanged(Context context, AppWidgetManager appWidgetManager, int appWidgetId, Bundle newOptions) {
                   super.onAppWidgetOptionsChanged(context, appWidgetManager, appWidgetId, newOptions);
-                  pushWidgetFrame(context, System.currentTimeMillis());
+                  tickWidgetOnSecondBoundary(context, System.currentTimeMillis(), true);
                   FlipWidgetService.ensureRunning(context);
               }
           
@@ -1093,7 +1384,7 @@ jobs:
                   String action = intent.getAction();
                   if (ACTION_WIDGET_CYCLE_THEME.equals(action)) {
                       ClockPrefs.cycleThemeMode(context);
-                      pushWidgetFrame(context, System.currentTimeMillis());
+                      tickWidgetOnSecondBoundary(context, System.currentTimeMillis(), true);
                       FlipWidgetService.ensureRunning(context);
                   } else if (ACTION_WIDGET_OPEN_APP.equals(action)) {
                       FlipWidgetService.ensureRunning(context);
@@ -1101,17 +1392,21 @@ jobs:
                       openApp.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                       context.startActivity(openApp);
                   } else {
-                      pushWidgetFrame(context, System.currentTimeMillis());
+                      tickWidgetOnSecondBoundary(context, System.currentTimeMillis(), true);
                       FlipWidgetService.ensureRunning(context);
                   }
               }
           
               public static void updateAllWidgets(Context context) {
-                  pushWidgetFrame(context, System.currentTimeMillis());
+                  tickWidgetOnSecondBoundary(context, System.currentTimeMillis(), true);
                   FlipWidgetService.ensureRunning(context);
               }
           
-              public static void pushWidgetFrame(Context context, long nowMillis) {
+              public static synchronized void tickWidgetOnSecondBoundary(
+                      Context context,
+                      long nowMillis,
+                      boolean forceFullUpdate
+              ) {
                   try {
                       AppWidgetManager mgr = AppWidgetManager.getInstance(context);
                       ComponentName cn = new ComponentName(context, FlipOdometerWidgetProvider.class);
@@ -1120,52 +1415,163 @@ jobs:
                           return;
                       }
           
-                      Bitmap bmp = Bitmap.createBitmap(640, 280, Bitmap.Config.ARGB_8888);
-                      Canvas canvas = new Canvas(bmp);
-                      sharedRenderer.drawClock(
-                              context,
-                              canvas,
-                              640,
-                              280,
-                              nowMillis,
-                              ClockPrefs.getThemeMode(context),
-                              ClockPrefs.isUse24Hour(context),
-                              ClockPrefs.POS_CENTER,
-                              true,
-                              0f,
-                              0f
-                      );
+                      int theme = ClockPrefs.getThemeMode(context);
+                      boolean use24h = ClockPrefs.isUse24Hour(context);
+          
+                      if (theme != lastRenderedTheme || use24h != lastRendered24h) {
+                          forceFullUpdate = true;
+                      }
+          
+                      Calendar cal = Calendar.getInstance();
+                      cal.setTimeInMillis(nowMillis);
+          
+                      int sec = cal.get(Calendar.SECOND);
+                      int min = cal.get(Calendar.MINUTE);
+                      int hour24 = cal.get(Calendar.HOUR_OF_DAY);
+                      boolean isPm = (hour24 >= 12);
+                      int hourDisp = use24h ? hour24 : (hour24 % 12 == 0 ? 12 : hour24 % 12);
+          
+                      if (!forceFullUpdate && sec == lastRenderedSec && min == lastRenderedMin && hourDisp == lastRenderedHour) {
+                          return;
+                      }
+          
+                      Calendar prevCal = Calendar.getInstance();
+                      prevCal.setTimeInMillis(nowMillis - 1000L);
+                      int prevSec = prevCal.get(Calendar.SECOND);
+                      int prevMin = prevCal.get(Calendar.MINUTE);
+                      int prevHour24 = prevCal.get(Calendar.HOUR_OF_DAY);
+                      boolean prevIsPm = (prevHour24 >= 12);
+                      int prevHourDisp = use24h ? prevHour24 : (prevHour24 % 12 == 0 ? 12 : prevHour24 % 12);
+          
+                      String hourStr = use24h ? String.format(Locale.US, "%02d", hourDisp) : String.valueOf(hourDisp);
+                      String prevHourStr = use24h ? String.format(Locale.US, "%02d", prevHourDisp) : String.valueOf(prevHourDisp);
+                      String badge = use24h ? null : (isPm ? "PM" : "AM");
+                      String prevBadge = use24h ? null : (prevIsPm ? "PM" : "AM");
+          
+                      String minStr = String.format(Locale.US, "%02d", min);
+                      String prevMinStr = String.format(Locale.US, "%02d", prevMin);
+          
+                      String secStr = String.format(Locale.US, "%02d", sec);
+                      String prevSecStr = String.format(Locale.US, "%02d", prevSec);
+          
+                      int secSlot = sec % 2;
+                      int minSlot = min % 2;
+                      int hourSlot = hourDisp % 2;
           
                       RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.widget_flip);
-                      views.setImageViewBitmap(R.id.widget_image, bmp);
           
-                      // Tap left side (Hours/Minutes) -> Cycle Widget Theme (Dark / White / Transparent)
-                      Intent cycleIntent = new Intent(context, FlipOdometerWidgetProvider.class);
-                      cycleIntent.setAction(ACTION_WIDGET_CYCLE_THEME);
-                      PendingIntent cyclePi = PendingIntent.getBroadcast(
-                              context,
-                              100,
-                              cycleIntent,
-                              PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
-                      );
-                      views.setOnClickPendingIntent(R.id.widget_left_tap, cyclePi);
+                      if (forceFullUpdate) {
+                          int bgRes;
+                          if (theme == ClockPrefs.MODE_AMOLED_DARK) {
+                              bgRes = R.drawable.widget_bg_dark;
+                          } else if (theme == ClockPrefs.MODE_WHITE_LIGHT) {
+                              bgRes = R.drawable.widget_bg_light;
+                          } else {
+                              bgRes = R.drawable.widget_bg_trans;
+                          }
+                          views.setInt(R.id.widget_root, "setBackgroundResource", bgRes);
           
-                      // Tap right side (Seconds) -> Open App Settings & Ensure Live Flip Service Running
-                      Intent openIntent = new Intent(context, FlipOdometerWidgetProvider.class);
-                      openIntent.setAction(ACTION_WIDGET_OPEN_APP);
-                      PendingIntent openPi = PendingIntent.getBroadcast(
-                              context,
-                              200,
-                              openIntent,
-                              PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
-                      );
-                      views.setOnClickPendingIntent(R.id.widget_right_tap, openPi);
+                          // Populate both slots so the outgoing slot always holds the previous digit for 60fps ViewFlipper animation
+                          populateDualSlot(views, true, hourSlot, hourStr, badge, prevHourStr, prevBadge, 240, 250, theme,
+                                  R.id.hour_top_flipper, R.id.hour_bot_flipper,
+                                  R.id.hour_top_0, R.id.hour_bot_0, R.id.hour_top_1, R.id.hour_bot_1);
           
-                      for (int id : ids) {
-                          mgr.updateAppWidget(id, views);
+                          populateDualSlot(views, true, minSlot, minStr, null, prevMinStr, null, 240, 250, theme,
+                                  R.id.min_top_flipper, R.id.min_bot_flipper,
+                                  R.id.min_top_0, R.id.min_bot_0, R.id.min_top_1, R.id.min_bot_1);
+          
+                          populateDualSlot(views, true, secSlot, secStr, null, prevSecStr, null, 130, 136, theme,
+                                  R.id.sec_top_flipper, R.id.sec_bot_flipper,
+                                  R.id.sec_top_0, R.id.sec_bot_0, R.id.sec_top_1, R.id.sec_bot_1);
+          
+                          Intent cycleIntent = new Intent(context, FlipOdometerWidgetProvider.class);
+                          cycleIntent.setAction(ACTION_WIDGET_CYCLE_THEME);
+                          PendingIntent cyclePi = PendingIntent.getBroadcast(
+                                  context, 100, cycleIntent,
+                                  PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
+                          );
+                          views.setOnClickPendingIntent(R.id.widget_left_tap, cyclePi);
+          
+                          Intent openIntent = new Intent(context, FlipOdometerWidgetProvider.class);
+                          openIntent.setAction(ACTION_WIDGET_OPEN_APP);
+                          PendingIntent openPi = PendingIntent.getBroadcast(
+                                  context, 200, openIntent,
+                                  PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
+                          );
+                          views.setOnClickPendingIntent(R.id.widget_right_tap, openPi);
+          
+                          mgr.updateAppWidget(ids, views);
+                      } else {
+                          // Lightweight partial update: ONLY update the card(s) that changed this second!
+                          // Calling setDisplayedChild triggers the Launcher's 60/120fps GPU ViewFlipper animation!
+                          populateDualSlot(views, false, secSlot, secStr, null, prevSecStr, null, 130, 136, theme,
+                                  R.id.sec_top_flipper, R.id.sec_bot_flipper,
+                                  R.id.sec_top_0, R.id.sec_bot_0, R.id.sec_top_1, R.id.sec_bot_1);
+          
+                          if (min != lastRenderedMin) {
+                              populateDualSlot(views, false, minSlot, minStr, null, prevMinStr, null, 240, 250, theme,
+                                      R.id.min_top_flipper, R.id.min_bot_flipper,
+                                      R.id.min_top_0, R.id.min_bot_0, R.id.min_top_1, R.id.min_bot_1);
+                          }
+          
+                          if (hourDisp != lastRenderedHour) {
+                              populateDualSlot(views, false, hourSlot, hourStr, badge, prevHourStr, prevBadge, 240, 250, theme,
+                                      R.id.hour_top_flipper, R.id.hour_bot_flipper,
+                                      R.id.hour_top_0, R.id.hour_bot_0, R.id.hour_top_1, R.id.hour_bot_1);
+                          }
+          
+                          mgr.partiallyUpdateAppWidget(ids, views);
                       }
+          
+                      lastRenderedSec = sec;
+                      lastRenderedMin = min;
+                      lastRenderedHour = hourDisp;
+                      lastRenderedTheme = theme;
+                      lastRendered24h = use24h;
                   } catch (Exception ignored) {
                   }
+              }
+          
+              private static void populateDualSlot(
+                      RemoteViews views,
+                      boolean includePrevSlot,
+                      int activeSlot,
+                      String currText,
+                      String currBadge,
+                      String prevText,
+                      String prevBadge,
+                      int cardW,
+                      int cardH,
+                      int theme,
+                      int topFlipperId,
+                      int botFlipperId,
+                      int top0Id,
+                      int bot0Id,
+                      int top1Id,
+                      int bot1Id
+              ) {
+                  Bitmap[] currHalves = sharedRenderer.renderCardHalvesForWidget(cardW, cardH, currText, currBadge, theme);
+                  if (activeSlot == 0) {
+                      views.setImageViewBitmap(top0Id, currHalves[0]);
+                      views.setImageViewBitmap(bot0Id, currHalves[1]);
+                  } else {
+                      views.setImageViewBitmap(top1Id, currHalves[0]);
+                      views.setImageViewBitmap(bot1Id, currHalves[1]);
+                  }
+          
+                  if (includePrevSlot) {
+                      Bitmap[] prevHalves = sharedRenderer.renderCardHalvesForWidget(cardW, cardH, prevText, prevBadge, theme);
+                      if (activeSlot == 0) {
+                          views.setImageViewBitmap(top1Id, prevHalves[0]);
+                          views.setImageViewBitmap(bot1Id, prevHalves[1]);
+                      } else {
+                          views.setImageViewBitmap(top0Id, prevHalves[0]);
+                          views.setImageViewBitmap(bot0Id, prevHalves[1]);
+                      }
+                  }
+          
+                  views.setDisplayedChild(topFlipperId, activeSlot);
+                  views.setDisplayedChild(botFlipperId, activeSlot);
               }
           }
           EOF_FILE
@@ -1476,7 +1882,7 @@ jobs:
                   root.addView(title);
           
                   TextView subtitle = new TextView(this);
-                  subtitle.setText("Realme 10 Pro+ (Android 15) â€¢ Widget + Live Wallpaper + Gallery BG");
+                  subtitle.setText("Realme 10 Pro+ (Android 15) • 60fps Hardware Widget + Gallery BG");
                   subtitle.setTextColor(Color.parseColor("#94A3B8"));
                   subtitle.setTextSize(13f);
                   subtitle.setPadding(0, dp(4), 0, dp(12));
@@ -1498,8 +1904,7 @@ jobs:
                   previewView.setLayoutParams(prevLp);
                   root.addView(previewView);
           
-                  // 1. Add Live-Flipping Home Screen Widget
-                  Button pinWidgetBtn = makeButton("1. Pin Live 3D Flip Widget to Home Screen", "#10B981", "#FFFFFF");
+                  Button pinWidgetBtn = makeButton("1. Pin 60fps 3D Flip Widget to Home Screen", "#10B981", "#FFFFFF");
                   pinWidgetBtn.setOnClickListener(new View.OnClickListener() {
                       @Override
                       public void onClick(View v) {
@@ -1508,7 +1913,6 @@ jobs:
                   });
                   root.addView(pinWidgetBtn);
           
-                  // 2. Set as Home / Lock Screen Live Wallpaper
                   Button setWpBtn = makeButton("2. Set as Home / Lock Screen Live Wallpaper", "#E11D48", "#FFFFFF");
                   setWpBtn.setOnClickListener(new View.OnClickListener() {
                       @Override
@@ -1518,7 +1922,6 @@ jobs:
                   });
                   root.addView(setWpBtn);
           
-                  // 3. Choose Custom Background Image from Gallery / File Manager
                   root.addView(makeSectionHeader("Custom Background from Gallery / File Manager (for Live Wallpaper & Full-Screen):"));
                   LinearLayout bgRow = new LinearLayout(this);
                   bgRow.setOrientation(LinearLayout.HORIZONTAL);
@@ -1539,13 +1942,12 @@ jobs:
                       public void onClick(View v) {
                           ClockPrefs.clearCustomBackground(MainActivity.this);
                           refreshStatus();
-                          Toast.makeText(MainActivity.this, "Custom photo cleared (using solid/transparent mode)", Toast.LENGTH_SHORT).show();
+                          Toast.makeText(MainActivity.this, "Custom photo cleared", Toast.LENGTH_SHORT).show();
                       }
                   });
                   bgRow.addView(clearGalleryBtn);
                   root.addView(bgRow);
           
-                  // 4. Launch Full-Screen AMOLED Clock
                   Button fullScreenBtn = makeButton("3. Launch Full-Screen AMOLED Desk Clock", "#2563EB", "#FFFFFF");
                   fullScreenBtn.setOnClickListener(new View.OnClickListener() {
                       @Override
@@ -1556,8 +1958,7 @@ jobs:
                   });
                   root.addView(fullScreenBtn);
           
-                  // 5. Card & Background Theme Selector
-                  root.addView(makeSectionHeader("Card & Background Theme (or Tap Widget / Double-Tap Wallpaper):"));
+                  root.addView(makeSectionHeader("Card & Background Theme (or Tap Left Side of Widget):"));
           
                   LinearLayout themeRow1 = new LinearLayout(this);
                   themeRow1.setOrientation(LinearLayout.HORIZONTAL);
@@ -1573,7 +1974,6 @@ jobs:
                   themeRow2.addView(makeThemeBtn("Transparent (Dark)", ClockPrefs.MODE_TRANS_DARK_TEXT));
                   root.addView(themeRow2);
           
-                  // 6. Time Format & Home Screen Position
                   root.addView(makeSectionHeader("Time Format & Live Wallpaper Clock Position:"));
                   LinearLayout posRow = new LinearLayout(this);
                   posRow.setOrientation(LinearLayout.HORIZONTAL);
@@ -1619,7 +2019,7 @@ jobs:
                   if (requestCode == REQ_PICK_BACKGROUND_IMAGE && resultCode == Activity.RESULT_OK && data != null) {
                       Uri uri = data.getData();
                       if (ClockPrefs.saveCustomBackgroundFromUri(this, uri)) {
-                          Toast.makeText(this, "Custom gallery background saved for Live Wallpaper & Full-Screen!", Toast.LENGTH_LONG).show();
+                          Toast.makeText(this, "Custom gallery background saved!", Toast.LENGTH_LONG).show();
                           refreshStatus();
                       } else {
                           Toast.makeText(this, "Could not load selected image", Toast.LENGTH_SHORT).show();
@@ -1721,8 +2121,8 @@ jobs:
                   statusLabel.setText(
                           "Active: " + modeNames[m]
                           + (hasBg ? " + Custom Gallery Photo" : "")
-                          + " â€¢ " + (h24 ? "24-Hour" : "12-Hour AM/PM")
-                          + " â€¢ Pos: " + posNames[pos]
+                          + " • " + (h24 ? "24-Hour" : "12-Hour AM/PM")
+                          + " • Pos: " + posNames[pos]
                   );
               }
           
