@@ -104,6 +104,7 @@ jobs:
               }
           
               compileOptions {
+                  encoding = 'UTF-8'
                   sourceCompatibility JavaVersion.VERSION_17
                   targetCompatibility JavaVersion.VERSION_17
               }
@@ -111,6 +112,10 @@ jobs:
               testOptions {
                   unitTests.returnDefaultValues = true
               }
+          }
+          
+          tasks.withType(JavaCompile).configureEach {
+              options.encoding = 'UTF-8'
           }
           
           dependencies {
@@ -2739,7 +2744,7 @@ jobs:
                   bgRow.addView(clearGalleryBtn);
                   root.addView(bgRow);
           
-                  // Theme Selector (Equal-weight 2x2 grid â€” also supports independent per-widget tap on home screen)
+                  // Theme Selector (Equal-weight 2x2 grid - also supports independent per-widget tap on home screen)
                   root.addView(makeSectionHeader("Theme Mode (Tap any Home Widget's left side to set per-widget theme):"));
                   LinearLayout themeRow1 = makeEqualRow();
                   themeRow1.addView(makeThemeBtn("AMOLED Dark", ClockPrefs.MODE_AMOLED_DARK));
@@ -2900,7 +2905,7 @@ jobs:
                   } else {
                       deviceName = capitalizeFirst(manufacturer) + " " + model;
                   }
-                  return deviceName + " (Android " + Build.VERSION.RELEASE + " â€¢ API " + Build.VERSION.SDK_INT + ")";
+                  return deviceName + " (Android " + Build.VERSION.RELEASE + " | API " + Build.VERSION.SDK_INT + ")";
               }
           
               private String capitalizeFirst(String s) {
@@ -3057,15 +3062,14 @@ jobs:
                   statusLabel.setText(
                           modeNames[m]
                           + (hasBg ? " + Custom Photo" : "")
-                          + " â€¢ " + (h24 ? "24h" : "12h")
-                          + " â€¢ Sec: " + (showSec ? (batSaver ? "Static (BatSaver)" : "60fps") : "Hidden")
-                          + " â€¢ Date: " + (showDate ? "On" : "Off")
-                          + "
-          Speed: " + speedNames[speed]
-                          + " â€¢ Size: " + sizeNames[size]
-                          + " â€¢ Gap: " + spaceNames[space]
-                          + " â€¢ AMOLED Shift: " + (amoled ? "On" : "Off")
-                          + " â€¢ Pos: " + posNames[pos]
+                          + " | " + (h24 ? "24h" : "12h")
+                          + " | Sec: " + (showSec ? (batSaver ? "Static (BatSaver)" : "60fps") : "Hidden")
+                          + " | Date: " + (showDate ? "On" : "Off")
+                          + " | Speed: " + speedNames[speed]
+                          + " | Size: " + sizeNames[size]
+                          + " | Gap: " + spaceNames[space]
+                          + " | AMOLED Shift: " + (amoled ? "On" : "Off")
+                          + " | Pos: " + posNames[pos]
                   );
               }
           
